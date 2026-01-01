@@ -8,34 +8,35 @@ function App() {
   const [error, setError] = useState('');
 
   // Use environment variable or relative URL for production
-  const API_URL = "https://cse440-4.onrender.com/predict" || '/predict';
+const API_URL = import.meta.env.VITE_API_URL;
 
-  const handlePredict = async () => {
-    setLoading(true);
-    setError('');
-    setResult(null);
-    
-    try {
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: inputText }),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Prediction failed');
-      }
-      
-      const data = await response.json();
-      setResult(data);
-    } catch (err) {
-      setError(err.message || 'Error connecting to server. Is the backend running?');
-      console.error('Prediction error:', err);
-    } finally {
-      setLoading(false);
+const handlePredict = async () => {
+  setLoading(true);
+  setError('');
+  setResult(null);
+
+  try {
+    const response = await fetch(`${API_URL}/predict`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: inputText }),
+    });
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error || 'Prediction failed');
     }
-  };
+
+    const data = await response.json();
+    setResult(data);
+  } catch (err) {
+    setError(err.message || 'Error connecting to server.');
+    console.error('Prediction error:', err);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="app-container">
