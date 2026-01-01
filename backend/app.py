@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import tensorflow as tf
 import numpy as np
@@ -8,12 +8,12 @@ import string
 import nltk
 from nltk.corpus import stopwords
 from keras.preprocessing.sequence import pad_sequences
+import os
 
-# Initialize App
-app = Flask(__name__)
+app = Flask(__name__, static_folder='../frontend/build', static_url_path='/')
 CORS(app)
 
-# --- LOAD RESOURCES ---
+# --- MODEL AND RESOURCES ---
 print("Loading model and resources...")
 model = tf.keras.models.load_model("sentiment_model.h5")
 
@@ -22,7 +22,6 @@ with open("word_index.json", "r") as f:
 
 class_names = np.load("classes.npy", allow_pickle=True)
 
-# --- NLP PREPROCESSING ---
 nltk.download('stopwords')
 stop_words = set(stopwords.words('english'))
 
@@ -39,49 +38,38 @@ def nlp_clean(text):
 
 def encode_text(text):
     cleaned_text = nlp_clean(text)
-    tokens = cleaned_text.split() 
+    tokens = cleaned_text.split()
     sequence = [word_index[word] for word in tokens if word in word_index]
     padded = pad_sequences([sequence], maxlen=200, padding="post")
     return padded
 
-# --- COMBINED ROUTE ---
+@app.route('/predict', methods=['POST'])
+def predict():
+    data = request.json
+    user_text = data.get('text', '')
+    
+    if not user_text:
+        return jsonify({'error': 'No text provided'}), 400
 
-@app.route("/", methods=["GET", "POST"], strict_slashes=False)
-def handle_root():
-    # 1. Handle GET (Browser visits, Render health checks)
-    if request.method == "GET":
-        return jsonify({
-            "status": "Online",
-            "message": "NLP Server is active. Send a POST request with {'text': '...'} to this same URL to get a prediction."
-        }), 200
+    processed_input = encode_text(user_text)
+    prediction_probs = model.predict(processed_input)
+    predicted_index = np.argmax(prediction_probs)
+    predicted_class = class_names[predicted_index]
+    confidence = float(np.max(prediction_probs))
 
-    # 2. Handle POST (React App requests)
-    try:
-        data = request.json
-        if not data or 'text' not in data:
-            return jsonify({'error': 'No text provided'}), 400
-            
-        user_text = data.get('text', '')
-        
-        # Process and Predict
-        processed_input = encode_text(user_text)
-        prediction_probs = model.predict(processed_input)
-        predicted_index = np.argmax(prediction_probs)
-        predicted_class = class_names[predicted_index]
-        confidence = float(np.max(prediction_probs))
+    return jsonify({
+        'class': predicted_class,
+        'confidence': f"{confidence:.2%}"
+    })
 
-        return jsonify({
-            'class': str(predicted_class),
-            'confidence': f"{confidence:.2%}"
-        })
-        
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-# Silence favicon 404s
-@app.route('/favicon.ico')
-def favicon():
-    return '', 204
+# Catch all route to serve React app
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve(path):
+    if path != "" and os.path.exists(app.static_folder + '/' + path):
+        return send_from_directory(app.static_folder, path)
+    else:
+        return send_from_directory(app.static_folder, 'index.html')
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

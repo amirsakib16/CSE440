@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import './App.css';
+import './App.css'; // Import the styles
 
 function App() {
   const [inputText, setInputText] = useState('');
@@ -7,37 +7,24 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Added 'e' parameter to prevent default form/button behavior
-  const handlePredict = async (e) => {
-    if (e) e.preventDefault(); 
-    
+  const handlePredict = async () => {
     setLoading(true);
     setError('');
     setResult(null);
     
     try {
-      // 1. MUST use https for Render
-      // 2. MUST include the trailing slash /
-      const response = await fetch('https://v0p22299222nlp.onrender.com/', {
+      const response = await fetch('http://127.0.0.1:5000/predict', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Accept': 'application/json' 
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: inputText }),
       });
       
-      // If the server returns 405, it means it's still seeing a GET
-      if (response.status === 405) {
-        throw new Error('Server received GET instead of POST. Check trailing slash.');
-      }
-
       if (!response.ok) throw new Error('Prediction failed');
       
       const data = await response.json();
       setResult(data);
     } catch (err) {
-      setError('Error: ' + err.message);
+      setError('Error connecting to server. Is the backend running?');
       console.error(err);
     } finally {
       setLoading(false);
@@ -46,6 +33,7 @@ function App() {
 
   return (
     <div className="app-container">
+      {/* Animated background elements */}
       <div className="bg-elements">
         <div className="blob blob-1"></div>
         <div className="blob blob-2"></div>
@@ -104,6 +92,9 @@ function App() {
                       <div className="dot"></div>
                       <h2>Prediction Result</h2>
                     </div>
+                    <svg className="check-icon" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
                   </div>
                   
                   <div className="result-body">
@@ -133,10 +124,19 @@ function App() {
           {error && (
             <div className="error-container animate-fadeIn">
               <div className="error-card">
+                <svg className="error-icon" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
                 <p>{error}</p>
               </div>
             </div>
           )}
+        </div>
+
+        <div className="floating-particles">
+          <div className="particle p1"></div>
+          <div className="particle p2"></div>
+          <div className="particle p3"></div>
         </div>
       </div>
     </div>
