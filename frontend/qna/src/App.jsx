@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import './App.css'; // Import the styles
+import './App.css';
 
 function App() {
   const [inputText, setInputText] = useState('');
@@ -7,25 +7,31 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Use environment variable or relative URL for production
+  const API_URL = "http://127.0.0.1:5000/predict" || '/predict';
+
   const handlePredict = async () => {
     setLoading(true);
     setError('');
     setResult(null);
     
     try {
-      const response = await fetch('http://127.0.0.1:5000/predict', {
+      const response = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: inputText }),
       });
       
-      if (!response.ok) throw new Error('Prediction failed');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Prediction failed');
+      }
       
       const data = await response.json();
       setResult(data);
     } catch (err) {
-      setError('Error connecting to server. Is the backend running?');
-      console.error(err);
+      setError(err.message || 'Error connecting to server. Is the backend running?');
+      console.error('Prediction error:', err);
     } finally {
       setLoading(false);
     }
