@@ -16,7 +16,8 @@ import os
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # ✅ VITE BUILD PATH (VERY IMPORTANT)
-FRONTEND_DIST = os.path.join(BASE_DIR, "../frontend/qna/dist")
+FRONTEND_DIST = os.path.join(BASE_DIR, "dist")
+
 
 if not os.path.exists(FRONTEND_DIST):
     print(f"⚠️  WARNING: Frontend build not found at {FRONTEND_DIST}")
