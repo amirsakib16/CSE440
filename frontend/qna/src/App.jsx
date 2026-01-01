@@ -8,7 +8,7 @@ function App() {
   const [error, setError] = useState('');
 
   // Use environment variable or relative URL for production
-  const API_URL = "https://cse440-3.onrender.com/predict" || '/predict';
+  const API_URL = "https://cse440-4.onrender.com/predict" || '/predict';
 
   const handlePredict = async () => {
     setLoading(true);
