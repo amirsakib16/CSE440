@@ -47,6 +47,12 @@ def encode_text(text):
     # 4. Pad (MAX_LEN was 200 in your code)
     padded = pad_sequences([sequence], maxlen=200, padding="post")
     return padded
+@app.route("/", methods=["GET"])
+def home():
+    return jsonify({
+        "status": "OK",
+        "message": "Q&A Classifier API is running 🚀"
+    })
 
 @app.route('/predict', methods=['POST'])
 def predict():
