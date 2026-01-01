@@ -8,9 +8,10 @@ import string
 import nltk
 from nltk.corpus import stopwords
 from keras.preprocessing.sequence import pad_sequences
+
 # Initialize App
 app = Flask(__name__)
-CORS(app)  # Allow React to communicate with this backend
+CORS(app)
 
 # --- LOAD RESOURCES ---
 print("Loading model and resources...")
@@ -21,7 +22,7 @@ with open("word_index.json", "r") as f:
 
 class_names = np.load("classes.npy", allow_pickle=True)
 
-# --- REUSE YOUR PREPROCESSING LOGIC ---
+# --- NLP PREPROCESSING ---
 nltk.download('stopwords')
 stop_words = set(stopwords.words('english'))
 
@@ -36,39 +37,51 @@ def nlp_clean(text):
     cleaned_words = [w for w in words if w not in stop_words]
     return " ".join(cleaned_words)
 
-# Preprocessing helper matching your training
 def encode_text(text):
-    # 1. Clean
     cleaned_text = nlp_clean(text)
-    # 2. Tokenize (simple split as used in your simple_preprocess logic)
     tokens = cleaned_text.split() 
-    # 3. Map to integers
     sequence = [word_index[word] for word in tokens if word in word_index]
-    # 4. Pad (MAX_LEN was 200 in your code)
     padded = pad_sequences([sequence], maxlen=200, padding="post")
     return padded
-# --- UPDATE THIS SECTION IN YOUR FLASK APP ---
 
-@app.route("/", methods=["POST"], strict_slashes=False)
-def predict():
-    data = request.json
-    user_text = data.get('text', '')
-    
-    if not user_text:
-        return jsonify({'error': 'No text provided'}), 400
+# --- COMBINED ROUTE ---
 
-    # Process and Predict
-    processed_input = encode_text(user_text)
-    prediction_probs = model.predict(processed_input)
-    predicted_index = np.argmax(prediction_probs)
-    predicted_class = class_names[predicted_index]
-    confidence = float(np.max(prediction_probs))
+@app.route("/", methods=["GET", "POST"], strict_slashes=False)
+def handle_root():
+    # 1. Handle GET (Browser visits, Render health checks)
+    if request.method == "GET":
+        return jsonify({
+            "status": "Online",
+            "message": "NLP Server is active. Send a POST request with {'text': '...'} to this same URL to get a prediction."
+        }), 200
 
-    return jsonify({
-        'class': predicted_class,
-        'confidence': f"{confidence:.2%}"
-    })
+    # 2. Handle POST (React App requests)
+    try:
+        data = request.json
+        if not data or 'text' not in data:
+            return jsonify({'error': 'No text provided'}), 400
+            
+        user_text = data.get('text', '')
+        
+        # Process and Predict
+        processed_input = encode_text(user_text)
+        prediction_probs = model.predict(processed_input)
+        predicted_index = np.argmax(prediction_probs)
+        predicted_class = class_names[predicted_index]
+        confidence = float(np.max(prediction_probs))
 
+        return jsonify({
+            'class': str(predicted_class),
+            'confidence': f"{confidence:.2%}"
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Silence favicon 404s
+@app.route('/favicon.ico')
+def favicon():
+    return '', 204
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
