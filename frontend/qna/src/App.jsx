@@ -7,29 +7,39 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handlePredict = async () => {
+// --- UPDATE THIS FUNCTION IN YOUR APP.JS ---
+
+const handlePredict = async () => {
     setLoading(true);
     setError('');
     setResult(null);
     
     try {
-      const response = await fetch('http://127.0.0.1:5000', {
+      // Ensure the URL has the trailing slash at the end
+      // Example: 'https://my-api.herokuapp.com/'
+      const response = await fetch('http://127.0.0.1:5000', { 
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
         body: JSON.stringify({ text: inputText }),
       });
       
-      if (!response.ok) throw new Error('Prediction failed');
+      if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Prediction failed');
+      }
       
       const data = await response.json();
       setResult(data);
     } catch (err) {
-      setError('Error connecting to server. Is the backend running?');
+      setError('Connection failed. Please ensure the backend is active.');
       console.error(err);
     } finally {
       setLoading(false);
     }
-  };
+};
 
   return (
     <div className="app-container">

@@ -47,7 +47,9 @@ def encode_text(text):
     # 4. Pad (MAX_LEN was 200 in your code)
     padded = pad_sequences([sequence], maxlen=200, padding="post")
     return padded
-@app.route("/", methods=["POST"])
+# --- UPDATE THIS SECTION IN YOUR FLASK APP ---
+
+@app.route("/", methods=["POST"], strict_slashes=False)
 def predict():
     data = request.json
     user_text = data.get('text', '')
