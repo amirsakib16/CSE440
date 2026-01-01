@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+gensim
+scikit-learn
+joblib
+numpy
+pandas
+pydantic
+flask
+flask-cors
+nltk
+keras
+tensorflow
