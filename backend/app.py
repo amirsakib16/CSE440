@@ -274,10 +274,15 @@ def serve_react(path):
 # =========================================================
 # 7️⃣ Startup & Shutdown Handlers
 # =========================================================
-@app.before_first_request
+first_request_done = False
+
+@app.before_request
 def startup():
-    """Run warmup on first request"""
-    warmup_model()
+    """Run warmup on first request only"""
+    global first_request_done
+    if not first_request_done:
+        warmup_model()
+        first_request_done = True
 
 def handle_shutdown(signum, frame):
     """Graceful shutdown handler"""
