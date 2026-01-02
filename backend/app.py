@@ -29,17 +29,7 @@ app = Flask(
     static_url_path=""
 )
 
-CORS(app, resources={
-    r"/*": {
-        "origins": [
-            "https://cse440nlpaipoweredamir.onrender.com",
-            "http://localhost:5173",  # for local dev
-            "http://localhost:4173"
-        ],
-        "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type"]
-    }
-})
+CORS(app)
 
 # =========================================================
 # 2️⃣ Load Model & Resources (ONCE)
