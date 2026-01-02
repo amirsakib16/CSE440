@@ -32,7 +32,7 @@ app = Flask(
 CORS(app, resources={
     r"/*": {
         "origins": [
-            "https://cse440amirsakib.onrender.com",
+            " https://cse440-5.onrender.com",
             "http://localhost:5173",  # for local dev
             "http://localhost:4173"
         ],
