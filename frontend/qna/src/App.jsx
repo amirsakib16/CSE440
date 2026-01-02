@@ -8,7 +8,7 @@ function App() {
   const [error, setError] = useState('');
 
   // Use environment variable or relative URL for production
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = "https://cse440-nlpqna.onrender.com";
 
 const handlePredict = async () => {
   setLoading(true);
@@ -16,22 +16,22 @@ const handlePredict = async () => {
   setResult(null);
 
   try {
-    const response = await fetch('/predict', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ text: inputText }),
-});
+    const response = await fetch(`${API_URL}/predict`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: inputText }),
+    });
 
     if (!response.ok) {
-      const errData = await response.json();
+      const errData = await response.json().catch(() => ({}));
       throw new Error(errData.error || 'Prediction failed');
     }
 
     const data = await response.json();
     setResult(data);
   } catch (err) {
-    setError(err.message || 'Network error');
-    console.error(err);
+    setError(err.message || 'Error connecting to server.');
+    console.error('Prediction error:', err);
   } finally {
     setLoading(false);
   }

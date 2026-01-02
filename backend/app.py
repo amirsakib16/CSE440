@@ -23,13 +23,10 @@ tf.config.threading.set_inter_op_parallelism_threads(1)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FRONTEND_DIST = os.path.join(BASE_DIR, "dist")
 
-app = Flask(
-    __name__,
-    static_folder="dist",
-    static_url_path="/"
-)
+app = Flask(__name__, static_folder="dist", static_url_path="/")
 
-CORS(app)
+CORS(app, resources={r"/*": {"origins": ["https://cse440-nlpqna.onrender.com"]}})
+
 
 # =========================================================
 # 2️⃣ Load Model & Resources (ONCE)
