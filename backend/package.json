@@ -1,0 +1,7 @@
+{
+  "name": "cse440-nlpqna",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "echo 'Frontend already built'"
+  }
+}

@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: cse440-nlpqna
+    runtime: python
+    region: oregon
+    plan: free
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --workers 1 --threads 4 --worker-class gthread --timeout 120 --bind 0.0.0.0:$PORT --access-logfile - --error-logfile -
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+      - key: TF_CPP_MIN_LOG_LEVEL
+        value: "2"
+    healthCheckPath: /api/health

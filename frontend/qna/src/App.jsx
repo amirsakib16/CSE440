@@ -7,36 +7,66 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Use environment variable or relative URL for production
-const API_URL = "https://cse440-nlpqna.onrender.com";
+  // Smart API URL detection - works in both dev and production
+  const getApiUrl = () => {
+    // In production (same domain), use relative URLs
+    if (window.location.hostname === 'cse440-nlpqna.onrender.com') {
+      return '';
+    }
+    // In development, use full URL
+    return import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  };
 
-const handlePredict = async () => {
-  setLoading(true);
-  setError('');
-  setResult(null);
+  const API_URL = getApiUrl();
 
-  try {
-    const response = await fetch(`${API_URL}/predict`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: inputText }),
-    });
-
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      throw new Error(errData.error || 'Prediction failed');
+  const handlePredict = async () => {
+    if (!inputText.trim()) {
+      setError('Please enter some text');
+      return;
     }
 
-    const data = await response.json();
-    setResult(data);
-  } catch (err) {
-    setError(err.message || 'Error connecting to server.');
-    console.error('Prediction error:', err);
-  } finally {
-    setLoading(false);
-  }
-};
+    setLoading(true);
+    setError('');
+    setResult(null);
 
+    try {
+      const response = await fetch(`${API_URL}/predict`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: inputText }),
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || `Server error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setResult(data);
+    } catch (err) {
+      let errorMessage = 'Error connecting to server.';
+      
+      if (err.message.includes('Failed to fetch')) {
+        errorMessage = 'Cannot connect to server. Please check if the backend is running.';
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
+      console.error('Prediction error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    // Submit on Ctrl+Enter or Cmd+Enter
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      handlePredict();
+    }
+  };
 
   return (
     <div className="app-container">
@@ -58,18 +88,25 @@ const handlePredict = async () => {
             <textarea
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder="Enter your question here..."
+              onKeyDown={handleKeyPress}
+              placeholder="Enter your question here... (Ctrl+Enter to submit)"
               rows="6"
               className="custom-textarea"
+              disabled={loading}
             />
             <div className="input-glow"></div>
           </div>
 
-          <div className="char-count">{inputText.length} characters</div>
+          <div className="char-count">
+            {inputText.length} characters
+            {inputText.length > 0 && (
+              <span className="hint"> • Press Ctrl+Enter to analyze</span>
+            )}
+          </div>
 
           <button 
             onClick={handlePredict} 
-            disabled={!inputText || loading}
+            disabled={!inputText.trim() || loading}
             className="predict-btn"
           >
             <div className="btn-glow"></div>
@@ -116,12 +153,29 @@ const handlePredict = async () => {
                         <div className="progress-bar-bg">
                           <div 
                             className="progress-bar-fill"
-                            style={{ width: result.confidence }}
+                            style={{ 
+                              width: result.confidence_raw 
+                                ? `${result.confidence_raw * 100}%` 
+                                : result.confidence 
+                            }}
                           ></div>
                         </div>
-                        <span className="confidence-value">{result.confidence}</span>
+                        <span className="confidence-value">
+                          {result.confidence}
+                        </span>
                       </div>
                     </div>
+
+                    {result.processed_tokens && (
+                      <div className="stats">
+                        <span className="stat-item">
+                          📝 {result.text_length} chars
+                        </span>
+                        <span className="stat-item">
+                          🔤 {result.processed_tokens} tokens
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -134,7 +188,10 @@ const handlePredict = async () => {
                 <svg className="error-icon" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                 </svg>
-                <p>{error}</p>
+                <div>
+                  <p className="error-title">Error</p>
+                  <p className="error-message">{error}</p>
+                </div>
               </div>
             </div>
           )}
