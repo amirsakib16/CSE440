@@ -25,8 +25,8 @@ FRONTEND_DIST = os.path.join(BASE_DIR, "dist")
 
 app = Flask(
     __name__,
-    static_folder=FRONTEND_DIST if os.path.exists(FRONTEND_DIST) else None,
-    static_url_path=""
+    static_folder="dist",
+    static_url_path="/"
 )
 
 CORS(app)

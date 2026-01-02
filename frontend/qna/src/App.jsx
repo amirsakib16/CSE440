@@ -17,10 +17,10 @@ const handlePredict = async () => {
 
   try {
     const response = await fetch('/predict', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: inputText }),
-    });
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ text: inputText }),
+});
 
     if (!response.ok) {
       const errData = await response.json();
