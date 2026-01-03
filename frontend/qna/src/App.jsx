@@ -8,8 +8,7 @@ function App() {
   const [error, setError] = useState('');
 
   // Use environment variable or relative URL for production
-// Leave empty so it uses the current domain automatically
-const API_URL = "";
+const API_URL = "http://127.0.0.1:5000";
 
 const handlePredict = async () => {
   setLoading(true);
